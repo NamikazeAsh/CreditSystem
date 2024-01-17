@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+testWorkspace/
+*.pyc
+*.pyo
+*.pyd
+
+# Caching directories
+*.pyc
+*.pyo
+*.orig
+*.log
+
+virtualenv
+media
+
+coverage
+.coverage

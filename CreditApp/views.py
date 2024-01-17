@@ -42,19 +42,20 @@ def check_eligibility(request):
         approved_limit = customer.approved_limit
 
         # Calculate credit score based on provided criteria
+        weight_past_loans_paid_on_time = 0.3
+        weight_number_of_loans_taken = 0.2
+        weight_loan_activity_current_year = 0.2
+        weight_loan_approved_volume = 0.3
         credit_score = (
-            past_loans_paid_on_time * 10 +
-            number_of_loans_taken * 5 +
-            loan_activity_current_year * 7 +
-            (loan_approved_volume / approved_limit) * 20
-        )
+            weight_past_loans_paid_on_time * past_loans_paid_on_time +
+            weight_number_of_loans_taken * number_of_loans_taken +
+            weight_loan_activity_current_year * loan_activity_current_year +
+            weight_loan_approved_volume * (loan_approved_volume / approved_limit)) * 100
         print("CREDIT SCORE ", credit_score)
 
-        # If sum of current loans > approved limit, set credit score to 0
         if current_loans_amount > approved_limit:
             credit_score = 0
 
-        # Check loan eligibility based on credit score
         if credit_score > 50:
             approval = True
         elif 30 < credit_score <= 50:
@@ -64,7 +65,6 @@ def check_eligibility(request):
         else:
             approval = False
 
-        # Check if sum of all current EMIs > 50% of monthly salary
         total_emis = sum(loan.monthly_payment or 0 for loan in Loan.objects.filter(customer=customer))
         if total_emis > 0.5 * customer.monthly_income:
             approval = False
@@ -79,7 +79,6 @@ def check_eligibility(request):
         # Calculate monthly installment inline
         monthly_installment = round((loan_amount * corrected_interest_rate / 1200) / (1 - (1 + corrected_interest_rate / 1200) ** (-tenure)), 2)
 
-        # Respond with eligibility information
         response_data = {
             'customer_id': customer_id,
             'approval': approval,
@@ -102,27 +101,104 @@ def create_loan(request):
         interest_rate = request.data['interest_rate']
         tenure = request.data['tenure']
 
-        # Sample logic:
-        eligibility_score = calculate_eligibility_score(customer_id, loan_amount, interest_rate, tenure)
+        customer = get_object_or_404(Customer, pk=customer_id)
+        
+        eligibility_response = check_eligibility_internal(customer_id, loan_amount, interest_rate, tenure)
 
-        if eligibility_score > 50:
-            Loan.objects.create(
-                customer_id=customer_id,
+        if eligibility_response['approval']:
+            loan = Loan.objects.create(
+                customer=customer,
                 loan_amount=loan_amount,
                 interest_rate=interest_rate,
                 tenure=tenure,
-                monthly_payment= (loan_amount * interest_rate / 1200) / (1 - (1 + interest_rate / 1200) ** (-tenure))
-                # Add other fields as needed
+                emis_paid_on_time=True,  # Assuming the loan is approved, payments are on time
+                start_date="2024-01-01",  # Adjust the start date as needed
+                end_date="2024-12-31",  # Adjust the end date as needed
             )
-            response_data = {'message': 'Loan created successfully'}
+
+            response_data = {
+                'loan_id': loan.id,
+                'customer_id': customer_id,
+                'loan_approved': True,
+                'message': 'Loan approved. Monthly installment details below.',
+                'monthly_installment': eligibility_response['monthly_installment'],
+            }
         else:
-            response_data = {'error': 'Customer is not eligible for the loan'}
+            response_data = {
+                'loan_id': None,
+                'customer_id': customer_id,
+                'loan_approved': False,
+                'message': 'Loan not approved. Eligibility criteria not met.',
+                'monthly_installment': 0,
+            }
 
         return Response(response_data, status=status.HTTP_200_OK)
 
     except KeyError:
         return Response({'error': 'Invalid request data'}, status=status.HTTP_400_BAD_REQUEST)
 
+# Helper function for internal use to check eligibility
+def check_eligibility_internal(customer_id, loan_amount, interest_rate, tenure):
+    # This function contains the logic to check eligibility, similar to the check_eligibility function
+    # However, it does not return a response; it returns a dictionary with eligibility information
+    # This avoids code duplication in both the check_eligibility and create_loan functions
+
+    customer = get_object_or_404(Customer, pk=customer_id)
+
+    past_loans_paid_on_time = Loan.objects.filter(customer=customer, emis_paid_on_time=True).count()
+    number_of_loans_taken = Loan.objects.filter(customer=customer).count()
+    loan_activity_current_year = Loan.objects.filter(customer=customer, start_date__year=2024).count()
+    loan_approved_volume = sum(loan.loan_amount for loan in Loan.objects.filter(customer=customer))
+    current_loans_amount = sum(loan.loan_amount for loan in Loan.objects.filter(customer=customer))
+    approved_limit = customer.approved_limit
+
+    # Calculate credit score based on provided criteria
+    weight_past_loans_paid_on_time = 0.3
+    weight_number_of_loans_taken = 0.2
+    weight_loan_activity_current_year = 0.2
+    weight_loan_approved_volume = 0.3
+    credit_score = (
+        weight_past_loans_paid_on_time * past_loans_paid_on_time +
+        weight_number_of_loans_taken * number_of_loans_taken +
+        weight_loan_activity_current_year * loan_activity_current_year +
+        weight_loan_approved_volume * (loan_approved_volume / approved_limit)) * 100
+    print("CREDIT SCORE ", credit_score)
+
+    if current_loans_amount > approved_limit:
+            credit_score = 0
+
+    if credit_score > 50:
+        approval = True
+    elif 30 < credit_score <= 50:
+        approval = interest_rate > 12
+    elif 10 < credit_score <= 30:
+        approval = interest_rate > 16
+    else:
+        approval = False
+
+    total_emis = sum(loan.monthly_payment or 0 for loan in Loan.objects.filter(customer=customer))
+    if total_emis > 0.5 * customer.monthly_income:
+        approval = False
+
+    # Correct the interest rate if it doesn't match the credit limit
+    corrected_interest_rate = (
+        12 if approval and interest_rate < 12 else
+        16 if approval and interest_rate > 16 else
+        interest_rate
+    )
+
+    monthly_installment = round((loan_amount * corrected_interest_rate / 1200) / (1 - (1 + corrected_interest_rate / 1200) ** (-tenure)), 2)
+
+    return {
+        'customer_id': customer_id,
+        'approval': approval,
+        'interest_rate': interest_rate,
+        'corrected_interest_rate': corrected_interest_rate,
+        'tenure': tenure,
+        'monthly_installment': monthly_installment,
+    }
+    
+    
 @api_view(['GET'])
 def view_loan(request, loan_id):
     try:

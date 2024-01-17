@@ -1,4 +1,10 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
+def validate_date_not_past(value):
+    if value < timezone.now().date():
+        raise ValidationError("Date cannot be in the past.")
 
 class Customer(models.Model):
     first_name = models.CharField(max_length=50)
@@ -15,6 +21,10 @@ class Loan(models.Model):
     interest_rate = models.FloatField(null = True)
     monthly_payment = models.IntegerField(null = True)
     emis_paid_on_time = models.IntegerField(default=0,null = True)
-    start_date = models.DateField(null = True)
-    end_date = models.DateField(null = True)
+    start_date = models.DateField(null=True, validators=[validate_date_not_past])
+    end_date = models.DateField(null=True, validators=[validate_date_not_past])
+    
+    def clean(self):
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            raise ValidationError("Start date cannot be after end date.")
 

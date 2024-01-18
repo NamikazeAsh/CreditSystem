@@ -218,4 +218,26 @@ def view_loan(request, loan_id):
         return Response({'error': 'Loan not found'}, status=404)
     
 
+@api_view(['GET'])
+def view_loans(request, customer_id):
+    try:
+        loans = Loan.objects.filter(customer__id=customer_id)
+        loans_data = []
+
+        for loan in loans:
+            loan_data = LoanSerializer(loan).data
+            repayments_left = loan.tenure - loan.emis_paid_on_time
+            loan_item = {
+                'loan_id': loan_data['id'],
+                'loan_amount': loan_data['loan_amount'],
+                'interest_rate': loan_data['interest_rate'],
+                'monthly_installment': loan_data['monthly_payment'],
+                'repayments_left': repayments_left,
+            }
+            loans_data.append(loan_item)
+
+        return Response(loans_data, status=200)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
 

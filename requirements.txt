@@ -1,0 +1,6 @@
+Django
+djangorestframework
+whitenoise
+gunicorn
+pre-commit
+psycopg

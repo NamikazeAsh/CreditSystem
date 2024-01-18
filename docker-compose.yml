@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_NAME=creditsystem
+      - POSTGRES_USER=Ashwin
+      - POSTGRES_PASSWORD=abcd1234
+    healthcheck:
+          test: ["CMD", "pg_isready", "-q"]
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_NAME=creditsystem
+      - POSTGRES_USER=Ashwin
+      - POSTGRES_PASSWORD=abcd1234
+    depends_on:
+      db:
+        condition: service_healthy

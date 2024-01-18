@@ -69,14 +69,12 @@ def check_eligibility(request):
         if total_emis > 0.5 * customer.monthly_income:
             approval = False
 
-        # Correct the interest rate if it doesn't match the credit limit
         corrected_interest_rate = (
             12 if approval and interest_rate < 12 else
             16 if approval and interest_rate > 16 else
             interest_rate
         )
 
-        # Calculate monthly installment inline
         monthly_installment = round((loan_amount * corrected_interest_rate / 1200) / (1 - (1 + corrected_interest_rate / 1200) ** (-tenure)), 2)
 
         response_data = {
@@ -112,8 +110,8 @@ def create_loan(request):
                 interest_rate=interest_rate,
                 tenure=tenure,
                 emis_paid_on_time=True,  # Assuming the loan is approved, payments are on time
-                start_date="2024-01-01",  # Adjust the start date as needed
-                end_date="2024-12-31",  # Adjust the end date as needed
+                start_date="2024-01-01",
+                end_date="2024-12-31",
             )
 
             response_data = {
@@ -139,9 +137,6 @@ def create_loan(request):
 
 # Helper function for internal use to check eligibility
 def check_eligibility_internal(customer_id, loan_amount, interest_rate, tenure):
-    # This function contains the logic to check eligibility, similar to the check_eligibility function
-    # However, it does not return a response; it returns a dictionary with eligibility information
-    # This avoids code duplication in both the check_eligibility and create_loan functions
 
     customer = get_object_or_404(Customer, pk=customer_id)
 
@@ -203,10 +198,24 @@ def check_eligibility_internal(customer_id, loan_amount, interest_rate, tenure):
 def view_loan(request, loan_id):
     try:
         loan = get_object_or_404(Loan, pk=loan_id)
-        # Implement your logic to serialize the loan object
-        serializer = LoanSerializer(loan)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        customer = loan.customer
+
+        customer_data = CustomerSerializer(customer).data
+        loan_data = LoanSerializer(loan).data
+
+        response_data = {
+            'loan_id': loan_data['id'],
+            'customer': customer_data,
+            'loan_amount': loan_data['loan_amount'],
+            'interest_rate': loan_data['interest_rate'],
+            'monthly_installment': loan_data['monthly_payment'],
+            'tenure': loan_data['tenure'],
+        }
+
+        return Response(response_data, status=200)
 
     except Loan.DoesNotExist:
-        return Response({'error': 'Loan does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Loan not found'}, status=404)
+    
+
 

@@ -28,24 +28,18 @@ def check_eligibility(request):
         interest_rate = request.data['interest_rate']
         tenure = request.data['tenure']
 
-        # Get customer details
         customer = get_object_or_404(Customer, pk=customer_id)
 
-        # Check past loans paid on time
         past_loans_paid_on_time = Loan.objects.filter(customer=customer, emis_paid_on_time=True).count()
 
-        # Check number of loans taken in the past
         number_of_loans_taken = Loan.objects.filter(customer=customer).count()
 
-        # Check loan activity in the current year
         loan_activity_current_year = Loan.objects.filter(customer=customer, start_date__year=2024).count()
-
-        # Check loan approved volume and sum of current loans
+        
         loan_approved_volume = sum(loan.loan_amount for loan in Loan.objects.filter(customer=customer))
         current_loans_amount = sum(loan.loan_amount for loan in Loan.objects.filter(customer=customer))
         approved_limit = customer.approved_limit
 
-        # Calculate credit score based on provided criteria
         weight_past_loans_paid_on_time = 0.3
         weight_number_of_loans_taken = 0.2
         weight_loan_activity_current_year = 0.2

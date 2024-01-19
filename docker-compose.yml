@@ -8,14 +8,14 @@ services:
     environment:
       - POSTGRES_NAME=creditsystem
       - POSTGRES_USER=Ashwin
-      - POSTGRES_PASSWORD=asdfg123
+      - POSTGRES_PASSWORD=abcd1234
     healthcheck:
           test: ["CMD", "pg_isready", "-q"]
     ports:
       - "5432:5432"
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: ./docker-entrypoint.sh
     volumes:
       - .:/code
     ports:
@@ -23,7 +23,7 @@ services:
     environment:
       - POSTGRES_NAME=creditsystem
       - POSTGRES_USER=Ashwin
-      - POSTGRES_PASSWORD=asdfg123
+      - POSTGRES_PASSWORD=abcd1234
     depends_on:
       db:
         condition: service_healthy

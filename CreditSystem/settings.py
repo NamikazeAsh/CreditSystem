@@ -76,27 +76,27 @@ WSGI_APPLICATION = "CreditSystem.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#     'ENGINE': 'django.db.backends.postgresql',
-#     'NAME': os.environ.get('POSTGRES_NAME'),
-#     'USER': os.environ.get('POSTGRES_USER'),
-#     'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-#     'HOST': 'db',
-#     'PORT': 5432, #default port you don't need to mention in docker-compose
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'creditsystem',
-        'USER': 'postgres',
-        'PASSWORD': 'asdfg123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': os.environ.get('POSTGRES_NAME'),
+    'USER': os.environ.get('POSTGRES_USER'),
+    'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+    'HOST': 'db',
+    'PORT': 5432, #default port you don't need to mention in docker-compose
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'creditsystem',
+#         'USER': 'postgres',
+#         'PASSWORD': 'asdfg123',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation

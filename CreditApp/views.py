@@ -133,7 +133,6 @@ def create_loan(request):
     except KeyError:
         return Response({'error': 'Invalid request data'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Helper function for internal use to check eligibility
 def check_eligibility_internal(customer_id, loan_amount, interest_rate, tenure):
 
     customer = get_object_or_404(Customer, pk=customer_id)
@@ -171,7 +170,6 @@ def check_eligibility_internal(customer_id, loan_amount, interest_rate, tenure):
     if total_emis > 0.5 * customer.monthly_income:
         approval = False
 
-    # Correct the interest rate if it doesn't match the credit limit
     corrected_interest_rate = (
         12 if approval and interest_rate < 12 else
         16 if approval and interest_rate > 16 else

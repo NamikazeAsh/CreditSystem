@@ -8,13 +8,17 @@ from .serializers import CustomerSerializer,LoanSerializer
 
 @api_view(['POST'])
 def register_customer(request):
-    data= request.data
+    data = request.data
     data['approved_limit'] = round(float(data["monthly_income"]) * 36, -5)
     serializer = CustomerSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({
+            "error": "Registration failed",
+            "details": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def check_eligibility(request):
@@ -109,9 +113,10 @@ def create_loan(request):
                 loan_amount=loan_amount,
                 interest_rate=interest_rate,
                 tenure=tenure,
-                emis_paid_on_time=True,  # Assuming the loan is approved, payments are on time
+                emis_paid_on_time=True,
                 start_date="2024-01-01",
                 end_date="2024-12-31",
+                monthly_payment = eligibility_response['monthly_installment']
             )
 
             response_data = {

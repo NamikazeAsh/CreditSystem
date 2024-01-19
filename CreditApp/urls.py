@@ -19,7 +19,7 @@ from django.urls import path,include
 from CreditApp import views
 
 urlpatterns = [
-    path('register',views.register_customer,name='register'),
+    path('register',views.register_customer,name='register-customer'),
     path('check-eligibility',views.check_eligibility,name='check-eligibility'),
     path('create-loan',views.create_loan,name='create-loan'),
     path('view-loan/<int:loan_id>',views.view_loan,name='view-loan'),

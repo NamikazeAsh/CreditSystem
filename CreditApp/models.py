@@ -13,6 +13,10 @@ class Customer(models.Model):
     phone_number = models.CharField(max_length=15)
     monthly_income = models.FloatField(null = True)
     approved_limit = models.FloatField(null=True)
+    
+    def clean(self):
+        if self.age<0:
+            raise ValidationError("Age cannot be below 0")
 
 class Loan(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)

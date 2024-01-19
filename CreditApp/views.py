@@ -49,7 +49,6 @@ def check_eligibility(request):
             weight_number_of_loans_taken * number_of_loans_taken +
             weight_loan_activity_current_year * loan_activity_current_year +
             weight_loan_approved_volume * (loan_approved_volume / approved_limit)) * 100
-        print("CREDIT SCORE ", credit_score)
 
         if current_loans_amount > approved_limit:
             credit_score = 0
@@ -146,7 +145,6 @@ def check_eligibility_internal(customer_id, loan_amount, interest_rate, tenure):
     current_loans_amount = sum(loan.loan_amount for loan in Loan.objects.filter(customer=customer))
     approved_limit = customer.approved_limit
 
-    # Calculate credit score based on provided criteria
     weight_past_loans_paid_on_time = 0.3
     weight_number_of_loans_taken = 0.2
     weight_loan_activity_current_year = 0.2
@@ -156,7 +154,6 @@ def check_eligibility_internal(customer_id, loan_amount, interest_rate, tenure):
         weight_number_of_loans_taken * number_of_loans_taken +
         weight_loan_activity_current_year * loan_activity_current_year +
         weight_loan_approved_volume * (loan_approved_volume / approved_limit)) * 100
-    print("CREDIT SCORE ", credit_score)
 
     if current_loans_amount > approved_limit:
             credit_score = 0

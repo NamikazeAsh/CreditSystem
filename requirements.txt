@@ -4,3 +4,5 @@ whitenoise
 gunicorn
 pre-commit
 psycopg
+pandas
+openpyxl

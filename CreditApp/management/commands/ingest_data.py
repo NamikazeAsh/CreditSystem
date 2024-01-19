@@ -1,3 +1,4 @@
+import os
 from django.core.management.base import BaseCommand
 import pandas as pd
 from CreditApp.models import Loan,Customer
@@ -6,8 +7,9 @@ class Command(BaseCommand):
     help = 'Ingest data from Excel sheets'
 
     def handle(self, *args, **kwargs):
-        customer_data = pd.read_excel('D:/CS/Python/CreditSystem/customer_data.xlsx')
-        loan_data = pd.read_excel('D:/CS/Python/CreditSystem/loan_data.xlsx')
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        customer_data = pd.read_excel(os.path.join(base_dir, 'customer_data.xlsx'))
+        loan_data = pd.read_excel(os.path.join(base_dir, 'loan_data.xlsx'))
         
         for _, customer_row in customer_data.iterrows():
             Customer.objects.create(

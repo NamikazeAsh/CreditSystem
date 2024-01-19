@@ -8,4 +8,4 @@ A credit approval system based on past data as well as future transactions, usin
 5. Server should work, use Postman to test the APIs.
 
 ## Video Link
-video
+https://drive.google.com/file/d/1gqRTyZMLylJllMWQS1etLQDULOuoedaS/view?usp=sharing
